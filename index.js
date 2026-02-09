@@ -16,6 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const contactForm = document.getElementById('contact-form');
     const formHeader = document.getElementById('form-header');
     const successMessage = document.getElementById('success-message');
+    const serviceQuoteBtns = document.querySelectorAll('.service-quote-btn');
+
+    // NEW DOM ELEMENTS FOR REEL
+    const reelPopup = document.getElementById('reel-popup');
+    const reelMedia = document.getElementById('reel-media');
+    const reelCampaignTitle = document.getElementById('reel-campaign-title');
 
     // 2. UI STATE MANAGEMENT (Navigation)
     const setView = (view) => {
@@ -32,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showFormBtn?.addEventListener('click', () => setView('form'));
     navCollaborateBtn?.addEventListener('click', () => setView('form'));
     backToProfileBtn?.addEventListener('click', () => setView('profile'));
+    serviceQuoteBtns.forEach(btn => btn.addEventListener('click', () => setView('form')));
 
     // 3. ACCORDION HANDLERS
     accordionItems.forEach(item => {
@@ -41,8 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         trigger?.addEventListener('click', () => {
             const isClosing = content?.classList.contains('open');
-            
-            // Close all open sections first for a clean single-view experience
             accordionItems.forEach(el => {
                 el.querySelector('.accordion-content')?.classList.remove('open');
                 el.querySelector('.rotate-icon')?.classList.remove('open');
@@ -57,31 +62,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 4. INQUIRY FORM LOGIC
+    // 4. INQUIRY FORM LOGIC (Existing)
     let activeInquiry = 'partnership';
-
     const updateFormTypeStyles = () => {
         if (activeInquiry === 'partnership') {
             btnPartnership?.classList.replace('bg-white', 'bg-rose-50/50');
-            btnPartnership?.classList.replace('border-slate-100', 'border-rose-400');
-            btnPartnership?.querySelector('div:first-child')?.classList.replace('text-slate-400', 'text-rose-500');
-            btnPartnership?.querySelector('div:last-child')?.classList.replace('text-slate-400', 'text-slate-800');
-
             btnInvestment?.classList.replace('bg-rose-50/50', 'bg-white');
-            btnInvestment?.classList.replace('border-amber-400', 'border-slate-100');
-            btnInvestment?.querySelector('div:first-child')?.classList.replace('text-amber-500', 'text-slate-400');
-            btnInvestment?.querySelector('div:last-child')?.classList.replace('text-slate-800', 'text-slate-400');
             budgetField?.classList.add('hidden');
         } else {
             btnInvestment?.classList.replace('bg-white', 'bg-rose-50/50');
-            btnInvestment?.classList.replace('border-slate-100', 'border-amber-400');
-            btnInvestment?.querySelector('div:first-child')?.classList.replace('text-slate-400', 'text-amber-500');
-            btnInvestment?.querySelector('div:last-child')?.classList.replace('text-slate-400', 'text-slate-800');
-
             btnPartnership?.classList.replace('bg-rose-50/50', 'bg-white');
-            btnPartnership?.classList.replace('border-rose-400', 'border-slate-100');
-            btnPartnership?.querySelector('div:first-child')?.classList.replace('text-rose-500', 'text-slate-400');
-            btnPartnership?.querySelector('div:last-child')?.classList.replace('text-slate-800', 'text-slate-400');
             budgetField?.classList.remove('hidden');
         }
     };
@@ -91,40 +81,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     contactForm?.addEventListener('submit', (e) => {
         e.preventDefault();
-        
-        // Visual feedback
         const submitBtn = contactForm.querySelector('button[type="submit"]');
-        if (submitBtn) {
-            submitBtn.innerHTML = '<span class="animate-pulse">Processing...</span>';
-            submitBtn.setAttribute('disabled', 'true');
-        }
-
+        if (submitBtn) submitBtn.innerHTML = 'Processing...';
         setTimeout(() => {
             contactForm.classList.add('hidden');
             formHeader?.classList.add('hidden');
             successMessage?.classList.remove('hidden');
-
             setTimeout(() => {
-                // Revert state for next time
                 successMessage?.classList.add('hidden');
                 contactForm.classList.remove('hidden');
                 formHeader?.classList.remove('hidden');
                 contactForm.reset();
-                if (submitBtn) {
-                    submitBtn.innerHTML = 'Deliver Inquiry';
-                    submitBtn.removeAttribute('disabled');
-                }
+                if (submitBtn) submitBtn.innerHTML = 'Deliver Inquiry';
                 setView('profile');
             }, 2500);
         }, 1500);
     });
 
-    // 5. SCROLL DOWN EFFECTS WITH CREATIVE ANIMATIONS
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
+    // 5. SCROLL EFFECTS (Existing)
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -132,10 +106,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 observer.unobserve(entry.target);
             }
         });
-    }, observerOptions);
+    }, { threshold: 0.1 });
 
-    // Observe all scroll animation elements
-    document.querySelectorAll('.scroll-fade-in, .scroll-slide-left, .scroll-slide-right, .scroll-scale, .scroll-rotate, .scroll-blur, .scroll-flip, .scroll-bounce, .scroll-expand, .scroll-stagger').forEach(el => {
-        observer.observe(el);
+    document.querySelectorAll('.scroll-fade-in, .scroll-stagger, .scroll-blur').forEach(el => observer.observe(el));
+
+    // 6. BRAND REEL POPUP LOGIC (NEW)
+    window.openReel = (title, mediaSrc) => {
+        reelCampaignTitle.innerText = title;
+        reelMedia.src = mediaSrc;
+        reelPopup.classList.remove('hidden');
+        reelPopup.classList.add('flex');
+        document.body.style.overflow = 'hidden'; // Stop background scroll
+    };
+
+    window.closeReel = () => {
+        reelPopup.classList.add('hidden');
+        reelPopup.classList.remove('flex');
+        document.body.style.overflow = ''; // Resume scroll
+        reelMedia.src = ''; // Clear media
+    };
+
+    // Close on ESC key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeReel();
     });
 });
